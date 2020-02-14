@@ -68,7 +68,7 @@
                   <q-btn
                     flat
                     round
-                    @click="openUserFormDialog('update', props)"
+                    @click="openUserFormDialog('delete', props)"
                     icon="mdi-trash-can-outline"
                   />
                 </q-td>
@@ -162,16 +162,30 @@
         </q-card-section>
       </q-card>
     </q-dialog>
+    <q-dialog v-model="deleteConfirmDialog" persistent>
+      <q-card>
+        <q-card-section class="row items-center">
+          <q-avatar icon="signal_wifi_off" color="primary" text-color="white" />
+          <span class="q-ml-sm">Are you sure you want to delete this row?</span>
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn flat label="Delete" color="primary" @click="onDelete" />
+          <q-btn flat label="Cancel" color="primary" v-close-popup />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </div>
 </template>
 
 <script>
 export default {
   data: () => ({
-    // serviceURI: "/default/REST2DBInsert/empselect?name=%25",
-    serviceURI: "default/REST2DBInsert/empselect?name=%25",
+    // serviceURI: "default/REST2DBInsert/empselect?name=%25",
+    serviceURI: null,
     userFormDialog: false,
     userFormDialogTitle: "New User",
+    deleteConfirmDialog: false,
     loading: false,
     emailRules: [
       v => !!v || "E-mail is required",
@@ -181,8 +195,7 @@ export default {
       name: null,
       age: null,
       email: null,
-      gender: null,
-      meal: null
+      gender: null
     },
     usersColumns: [
       {
@@ -222,34 +235,36 @@ export default {
         sortable: false
       }
     ],
-    users: []
+    users: [],
+    deletedIndex: -1
   }),
   created() {
-    this.listUsers();
+    if (this.serviceURI !== null) this.listUsers();
+  },
+  mounted() {
+    this.$axios.interceptors.request.use(
+      config => {
+        this.loading = true;
+        return config;
+      },
+      error => {
+        return Promise.reject(error);
+      }
+    );
+
+    this.$axios.interceptors.response.use(
+      response => {
+        this.loading = false;
+        return response;
+      },
+      error => {
+        return Promise.reject(error);
+      }
+    );
+    // this.$store.commit("module/LOADING", "data");
   },
   methods: {
     listUsers() {
-      this.$store.commit("LOADING", "data");
-      this.$axios.interceptors.request.use(
-        config => {
-          this.loading = true;
-          return config;
-        },
-        error => {
-          return Promise.reject(error);
-        }
-      );
-
-      this.$axios.interceptors.response.use(
-        response => {
-          this.loading = false;
-          return response;
-        },
-        error => {
-          return Promise.reject(error);
-        }
-      );
-
       this.$axios
         .get(this.serviceURI)
         .then(response => {
@@ -270,21 +285,63 @@ export default {
       if (mode === "update") {
         this.userFormDialogTitle = "Update User";
         this.user = Object.assign({}, props.row);
+        this.userFormDialog = true;
+      } else if (mode === "delete") {
+        this.deletedIndex = this.users.indexOf(props.row);
+        this.user = Object.assign({}, props.row);
+        this.deleteConfirmDialog = true;
       } else {
         this.onReset();
         this.userFormDialogTitle = "New User";
+        this.userFormDialog = true;
       }
-      this.userFormDialog = true;
     },
     onSubmit() {
-      console.log(this.user);
+      this.$axios({
+        method: "post",
+        url: "default/REST2DBInsert/empservice",
+        data: this.user
+      })
+        .then(result => {
+          this.users.push(this.user);
+          this.userFormDialog = false;
+        })
+        .catch(error => {
+          this.loading = false;
+          this.userFormDialog = false;
+          this.$q.notify({
+            color: "negative",
+            position: "top",
+            message: "Loading failed",
+            icon: "report_problem"
+          });
+        });
     },
     onReset() {
       this.user.name = null;
       this.user.age = null;
       this.user.email = null;
       this.user.gender = null;
-      this.user.meal = null;
+    },
+    onDelete() {
+      this.$axios({
+        method: "delete",
+        url: "default/REST2DBInsert/empdelete?name=" + this.user.name
+      })
+        .then(result => {
+          this.users.splice(this.deletedIndex, 1);
+          this.deleteConfirmDialog = false;
+        })
+        .catch(error => {
+          this.loading = false;
+          this.userFormDialog = false;
+          this.$q.notify({
+            color: "negative",
+            position: "top",
+            message: "Loading failed",
+            icon: "report_problem"
+          });
+        });
     }
   }
 };
