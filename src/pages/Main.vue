@@ -121,7 +121,7 @@
                   dense
                   outlined
                   v-model="user.gender"
-                  :options="['Male', 'Female']"
+                  :options="['M', 'F']"
                   label="Gender"
                   lazy-rules
                   :rules="[
