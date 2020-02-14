@@ -11,42 +11,23 @@ build:
     - script:
         name: pwd
         code: pwd
-    - install-packages:
-        packages: maven
-    - script:
-        name: maven meetup-handson-env-backend build
-        cwd: meetup-handson-env-backend
-        code: mvn clean package
 
-#Push the docker image with our built and tested application to the Oracle Container Registry
-meetup-handson-env-backend-push:
-  steps:
-    - internal/docker-push:
-        username: $DOCKER_USERNAME
-        password: $OCI_AUTH_TOKEN
-        repository: $DOCKER_REGISTRY/$DOCKER_REPO
-        registry: https://$DOCKER_REGISTRY/v2
-        tag: $WERCKER_GIT_BRANCH-$WERCKER_GIT_COMMIT-meetup-handson-env-backend
-        working-dir: /pipeline/source/meetup-handson-env-backend
-        ports: 8080
-        cmd: java -jar target/meetup-handson-env-backend-1.0.jar
-
-meetup-handson-env-frontend-push:
+hanjin-soa-test-frontend-push:
   steps:
     - script:
         name: pwd
         code: pwd
     - internal/docker-build:
-        context: meetup-handson-env-frontend
+        context: hanjin-soa-test-frontend
         dockerfile: Dockerfile
-        image-name: meetup-handson-env-frontend
+        image-name: hanjin-soa-test-frontend
     - internal/docker-push:
-        image-name: meetup-handson-env-frontend
+        image-name: hanjin-soa-test-frontend
         username: $DOCKER_USERNAME
         password: $OCI_AUTH_TOKEN
         repository: $DOCKER_REGISTRY/$DOCKER_REPO
         registry: https://$DOCKER_REGISTRY/v2
-        tag: $WERCKER_GIT_BRANCH-$WERCKER_GIT_COMMIT-meetup-handson-env-frontend
+        tag: $WERCKER_GIT_BRANCH-$WERCKER_GIT_COMMIT-hanjin-soa-test-frontend
 
 #Deploy our container from the Oracle Container Registry to the Oracle Container Engine (Kubernetes)
 deploy-to-cluster:
@@ -112,24 +93,14 @@ deploy-to-cluster:
         #        token: $KUBERNETES_AUTH_TOKEN
         insecure-skip-tls-verify: true
         command: create secret docker-registry wercker --docker-server=$DOCKER_REGISTRY --docker-email=nobody@oracle.com --docker-username=$DOCKER_USERNAME --docker-password='$OCI_AUTH_TOKEN'; echo create registry secret
-    - script:
-        name: "Visualise Kubernetes config"
-        code: cat kube-meetup-handson-env-backend-config.yml
-
-    - kubectl:
-        name: deploy meetup-handson-env-backend service to kubernetes
-        server: $KUBERNETES_MASTER
-        #        token: $KUBERNETES_AUTH_TOKEN
-        insecure-skip-tls-verify: true
-        command: apply -f kube-meetup-handson-env-backend-config.yml
 
     - script:
         name: "Visualise Kubernetes config"
-        code: cat kube-meetup-handson-env-frontend-config.yml
+        code: cat kube-hanjin-soa-test-frontend-config.yml
 
     - kubectl:
-        name: deploy kube-meetup-handson-env-frontend ui to kubernetes
+        name: deploy kube-hanjin-soa-test-frontend ui to kubernetes
         server: $KUBERNETES_MASTER
         #        token: $KUBERNETES_AUTH_TOKEN
         insecure-skip-tls-verify: true
-        command: apply -f kube-meetup-handson-env-frontend-config.yml
+        command: apply -f kube-hanjin-soa-test-frontend-config.yml
