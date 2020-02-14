@@ -1,5 +1,5 @@
 # Quasar App (soa_webservice_test)
-...
+......
 A Quasar Framework app
 
 ## Install the dependencies
