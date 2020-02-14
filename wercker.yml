@@ -18,7 +18,7 @@ hanjin-soa-test-frontend-push:
         name: pwd
         code: pwd
     - internal/docker-build:
-        context: hanjin-soa-test-frontend
+        #context: hanjin-soa-test-frontend
         dockerfile: Dockerfile
         image-name: hanjin-soa-test-frontend
     - internal/docker-push:
