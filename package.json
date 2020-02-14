@@ -2,7 +2,7 @@
   "name": "hanjin-soa-test-frontend",
   "version": "0.0.1",
   "description": "A Quasar Framework app",
-  "productName": "Quasar App",
+  "productName": "HanJin SOACS Hands-On Training",
   "cordovaId": "disregard",
   "capacitorId": "",
   "author": "mangdan <dan.donghu.kim@gmail.com>",
