@@ -230,7 +230,7 @@ export default {
       {
         name: "meal",
         align: "center",
-        label: "Favoriate Meal",
+        label: "Preferred Meal",
         field: "meal",
         sortable: false
       }
